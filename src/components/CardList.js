@@ -30,11 +30,11 @@ function CardList(props) {
         return (
           <Card
             title={item.title}
-            notes={item.notes}
-            key={item.key}
+            notes={item.note}
+            key={item.id}
             timeNow={date}
             deleteCard={() => {
-              return props.deleteItems(item.key);
+              return props.deleteItems(item.id);
             }}
           />
         );

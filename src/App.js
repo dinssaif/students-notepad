@@ -4,44 +4,15 @@ import CardList from "./components/CardList";
 import EmptyCard from "./components/EmptyCard";
 import Input from "./components/Input";
 import Alert from "./components/Alert";
+import { createNode, getNotes, deleteNotes } from "./utils/api";
 
 function App() {
-  useEffect(() => {
-    localStorage.setItem("items", JSON.stringify(newData));
-    localStorage.setItem("mode", JSON.stringify(smode));
-  });
-  const x = JSON.parse(localStorage.getItem("items"));
-  function checkMode() {
-    const y = localStorage.getItem("mode");
-    if (y === "false") {
-      return false;
-    } else {
-      return true;
-    }
-  }
   const [addData, setAddData] = useState(false);
-  const [smode, setMode] = useState(checkMode());
+  const [smode, setMode] = useState(true);
   const [alert, setAlert] = useState(false);
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
-  const [newData, setNewData] = useState(
-    x
-      ? x
-      : [
-          {
-            key: "n1",
-            title: "Javascript",
-            notes:
-              "Javascript is a multi-paradigm, high-level web programming language. It supports both declarative and imperative object-oriented programming techniques. Text data, regular expressions, and standard data structures are all supported by Javascript's application programming interfaces (API). It is one of the three essential technologies that power the internet, together with HTML and CSS.",
-          },
-          {
-            key: "n2",
-            title: "Python",
-            notes:
-              "Python is at the top of the list when it comes to the best programming languages. In all of its grandeur, Python is extremely popular among developers and data scientists due to its simplicity and adaptability. Python may be used to create web and desktop apps. Desktop applications with a graphical user interface, ML models, network servers, and much more.",
-          },
-        ]
-  );
+  const [newData, setNewData] = useState([]);
 
   function changeData() {
     setAddData((prev) => {
@@ -56,21 +27,17 @@ function App() {
   function notesValue(event) {
     setNotes(event.target.value);
   }
-  function submitForm(event) {
+  async function submitForm(event) {
     event.preventDefault();
-    setNewData((prev) => {
-      if (title === "" && notes === "") {
-        return [...prev];
-      } else
-        return [
-          {
-            key: `${title.slice(1, 2)}${Math.random(10)}`,
-            title: title,
-            notes: notes,
-          },
-          ...prev,
-        ];
-    });
+    try {
+      const res = await createNode({
+        title: title,
+        note: notes,
+      });
+      getNotesHandler();
+    } catch (error) {
+      console.log(error);
+    }
 
     setAlert(() => {
       if (title === "" && notes === "") {
@@ -84,18 +51,30 @@ function App() {
     });
   }
 
+  const getNotesHandler = async () => {
+    try {
+      const res = await getNotes();
+      setNewData([...res.data]);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   useEffect(() => {
+    getNotesHandler();
     alert &&
       setTimeout(() => {
         setAlert(false);
       }, 3000);
-  });
+  }, []);
 
-  function deleteItems(key) {
-    const filterData = newData.filter((item) => {
-      return item.key !== key;
-    });
-    setNewData([...filterData]);
+  async function deleteItems(key) {
+    try {
+      const res = await deleteNotes({ id: key });
+      setNewData([...res.data]);
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   function changemode() {
